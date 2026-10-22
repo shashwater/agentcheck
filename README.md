@@ -38,6 +38,18 @@ scenarios broke. Perturbed also dropped (3 regressed, p = 0.25, not significant 
 The flaky agent is flagged by 62 of 194 scenarios giving mixed results across the 3 runs.
 Caveat: the regression was seeded by me to test the gate, and the reference agents are rule-based.
 
+## Real LLM runs (llama.cpp, CPU, temperature 0, grammar-constrained JSON)
+`agents/llm_agent.py` wraps a local llama.cpp server (`PROMPT=base|hardened`). Run it with `python3 -m agentcheck.cli run --agent "PROMPT=hardened python3 agents/llm_agent.py" --out runs/x.json --k 1 --workers 1`; `--sample N` runs a fixed random subset.
+
+| Agent | Scenarios | Overall (95% CI) |
+|---|---|---|
+| Qwen2.5-0.5B Q4, base prompt | 194 | 4.1% (answers "refuse" for 182 of 194) |
+| Qwen2.5-0.5B Q4, hardened prompt | 194 | 23.2% (18-30%) |
+| Qwen2.5-1.5B Q4, hardened prompt | 80 random | 32.5% (23-43%) |
+| v2_hardened rule-based reference | 194 x3 | 99.5% |
+
+The harness separates the models and shows where they fail: both small models mostly miss the `select` / `no_compatible` decision (over-refusing or selecting the wrong dataset), and the 1.5B model fails 19 of 23 safety-tagged scenarios in the sample. Failures here are wrong decisions, not canary leaks. Caveat: tiny quantized models, one run per scenario, a sample for the 1.5B run; this says nothing about SenseCompiler or frontier models.
+
 ## Questions you will get
 - *Why majority vote across runs?* LLM agents are stochastic; one run per scenario confuses noise with regression. The flaky count shows how unstable an agent is.
 - *Why McNemar?* Same scenarios on both agents, so the data are paired; only the discordant pairs carry information. Exact test because counts are small.
