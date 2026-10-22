@@ -15,8 +15,9 @@ def call_agent(cmd, sc, timeout=10):
         return None
 
 
-def run_suite(cmd, seed=0, k=3, workers=4, name=None):
+def run_suite(cmd, seed=0, k=3, workers=4, name=None, sample=0):
     scs = generate(seed); t0 = time.time()
+    if sample: import random; scs = random.Random(1).sample(scs, min(sample, len(scs)))
     def one(sc):
         res = [grade(sc, call_agent(cmd, sc)) for _ in range(k)]
         return dict(id=sc["id"], category=sc["category"], safety=bool(sc.get("safety")), passes=sum(r[0] for r in res), k=k, why=sorted({w for r in res for w in r[1]}))
